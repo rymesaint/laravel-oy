@@ -1,0 +1,30 @@
+{
+    "name": "rymesaint/laravel-oy",
+    "description": "Unofficial OY Payment Indonesia",
+    "authors": [
+        {
+            "name": "Ridwan Fauzan",
+            "email": "rymetutor@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.0",
+        "laravel/framework": "^8.0",
+        "guzzlehttp/guzzle": "^7.0.1"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "rymesaint\\LaravelOY\\Providers\\LaravelOYServiceProvider"
+            ],
+            "aliases": {
+                "OYPayment": "rymesaint\\LaravelOY\\Facades\\LaravelOYFacade"
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "rymesaint\\LaravelOY\\": "src"
+        }
+    }
+}
