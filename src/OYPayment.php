@@ -1,7 +1,9 @@
 <?php
 namespace rymesaint\LaravelOY;
 
+use Brick\Math\BigDecimal;
 use Brick\Math\BigInteger;
+use DateTime;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
@@ -326,6 +328,394 @@ class OYPayment
             return Http::withHeaders(self::getDefaultHeaders())->delete(self::getBaseUrl()."/scheduled-remit", [
                 'partner_trx_id' => $partnerTrxId,
             ]);
+       } catch(\Exception $e) {
+           throwException($e);
+       }
+    }
+
+    /**
+     * This API will allow you to create a new scheduled disbursement based on the detail of a previous failed/cancelled scheduled disbursement.
+     * 
+     * @param string $oldPartnerTrxId 
+     * @param string $newPartnerTrxId 
+     * @param string|null $scheduleDate 
+     * @param string|null $triggerDate 
+     * @return Response|void 
+     */
+    public static function retryScheduledDisbursement(
+        String $oldPartnerTrxId,
+        String $newPartnerTrxId,
+        String $scheduleDate = null,
+        String $triggerDate = null
+    )
+    {
+       try {
+            return Http::withHeaders(self::getDefaultHeaders())->post(self::getBaseUrl()."/scheduled-remit/retry", [
+                'old_partner_trx_id' => $oldPartnerTrxId,
+                'new_partner_trx_id' => $newPartnerTrxId,
+                'schedule_date' => $scheduleDate,
+                'trigger_date' => $triggerDate
+            ]);
+       } catch(\Exception $e) {
+           throwException($e);
+       }
+    }
+
+    /**
+     * Use this API to create new VA number
+     * 
+     * [VA aggregator Bank Code](https://api-docs.oyindonesia.com/?php#callback-parameters-partner-callback-va-aggregator)
+     * 
+     * @param string $partnerUserId 
+     * @param string $bankCode 
+     * @param BigDecimal $amount 
+     * @param bool $isOpen 
+     * @param bool $isSingleUse 
+     * @param int|null $expirationTime 
+     * @param bool $isLifetime 
+     * @param string $usernameDisplay 
+     * @param string|null $email 
+     * @param int|null $trxExpirationTime 
+     * @param string|null $partnerTrxId 
+     * @param int $trxCounter 
+     * @return Response|void 
+     */
+    public static function createVirtualAccount(
+        String $partnerUserId,
+        String $bankCode,
+        BigDecimal $amount,
+        bool $isOpen = true,
+        bool $isSingleUse = false,
+        int $expirationTime = null,
+        bool $isLifetime = false,
+        String $usernameDisplay = 'username',
+        String $email = null,
+        int $trxExpirationTime = null,
+        String $partnerTrxId = null,
+        int $trxCounter = -1,
+    )
+    {
+       try {
+            return Http::withHeaders(self::getDefaultHeaders())->post(self::getBaseUrl()."/generate-static-va", [
+                'partner_user_id' => $partnerUserId,
+                'bank_code' => $bankCode,
+                'amount' => $amount,
+                'is_open' => $isOpen,
+                'is_single_use' => $isSingleUse,
+                'expiration_time' => $expirationTime,
+                'is_lifetime' => $isLifetime,
+                'username_display' => $usernameDisplay,
+                'email' => $email,
+                'trx_expiration_time' => $trxExpirationTime,
+                'partner_trx_id' => $partnerTrxId,
+                'trx_counter' => $trxCounter
+            ]);
+       } catch(\Exception $e) {
+           throwException($e);
+       }
+    }
+
+    /**
+     * Get VA info using Unique VA id.
+     * 
+     * @param string $id 
+     * @return Response|void 
+     */
+    public static function getVirtualAccountInfo(
+        String $id
+    )
+    {
+       try {
+            return Http::withHeaders(self::getDefaultHeaders())->get(self::getBaseUrl()."/static-virtual-account/$id");
+       } catch(\Exception $e) {
+           throwException($e);
+       }
+    }
+
+    /**
+     * Update VA using unique VA id.
+     * 
+     * @param string $id 
+     * @param BigDecimal $amount 
+     * @param bool $isSingleUse 
+     * @param int|null $expirationTime 
+     * @param string|null $usernameDisplay 
+     * @param bool $isLifetime 
+     * @param string|null $email 
+     * @param int|null $trxExpirationTime 
+     * @param string $partnerTrxId 
+     * @param int $trxCounter 
+     * @return Response|void 
+     */
+    public static function updateVirtualAccountInfo(
+        String $id,
+        BigDecimal $amount,
+        bool $isSingleUse = false,
+        int $expirationTime = null,
+        String $usernameDisplay = null,
+        bool $isLifetime = false,
+        String $email = null,
+        int $trxExpirationTime = null,
+        String $partnerTrxId,
+        int $trxCounter = -1
+    )
+    {
+       try {
+            return Http::withHeaders(self::getDefaultHeaders())->put(self::getBaseUrl()."/static-virtual-account/$id", [
+                'amount' => $amount,
+                'is_single_use' => $isSingleUse,
+                'expiration_time' => $expirationTime,
+                'username_display' => $usernameDisplay,
+                'is_lifetime' => $isLifetime,
+                'email' => $email,
+                'trx_expiration_time' => $trxExpirationTime,
+                'partner_trx_id' => $partnerTrxId,
+                'trx_counter' => $trxCounter
+            ]);
+       } catch(\Exception $e) {
+           throwException($e);
+       }
+    }
+
+    /**
+     * Get list of created VA
+     * 
+     * @param int $offset 
+     * @param int $limit 
+     * @return Response|void 
+     */
+    public static function getListVirtualAccount(
+        int $offset = 0,
+        int $limit = 10,
+    )
+    {
+       try {
+            return Http::withHeaders(self::getDefaultHeaders())->get(self::getBaseUrl()."/static-virtual-account", [
+                'offset' => $offset,
+                'limit' => $limit
+            ]);
+       } catch(\Exception $e) {
+           throwException($e);
+       }
+    }
+
+    /**
+     * Get list of incoming transaction for specific va number.
+     * 
+     * [Available Bank Aggregator](https://api-docs.oyindonesia.com/?php#va-aggregator-bank-code-va-aggregator)
+     * 
+     * @param int $id 
+     * @param int $offset 
+     * @param int $limit 
+     * @return Response|void 
+     */
+    public static function getListVATransaction(
+        int $id,
+        int $offset = 0,
+        int $limit = 10,
+    )
+    {
+       try {
+            return Http::withHeaders(self::getDefaultHeaders())->get(self::getBaseUrl()."/va-tx-history/$id", [
+                'offset' => $offset,
+                'limit' => $limit
+            ]);
+       } catch(\Exception $e) {
+           throwException($e);
+       }
+    }
+
+    /**
+     * An API to create payment checkout URL which return parameters by encapsulation.
+     * 
+     * @param int $partnerTrxId 
+     * @param string|null $description 
+     * @param string|null $notes 
+     * @param string $senderName 
+     * @param int $amount 
+     * @param string $email 
+     * @param string $phoneNumber 
+     * @param bool $isOpen 
+     * @param string $step 
+     * @param bool $includeAdminFee 
+     * @param string|null $listDisabledPaymentMethods 
+     * @param string $listEnabledBanks 
+     * @param string $listEnabledEwallet 
+     * @param DateTime|null $expiration 
+     * @param DateTime|null $dueDate 
+     * @param string|null $vaDisplayName 
+     * @return Response|void 
+     */
+    public static function createPaymentCheckout(
+        int $partnerTrxId,
+        String $description = null,
+        String $notes = null,
+        String $senderName,
+        int $amount = 15000,
+        String $email,
+        String $phoneNumber,
+        bool $isOpen = false,
+        String $step = 'input-amount',
+        bool $includeAdminFee = false,
+        String $listDisabledPaymentMethods = null,
+        String $listEnabledBanks = "002,008,009,013,022",
+        String $listEnabledEwallet = "shopeepay_ewallet,dana_ewallet,linkaja_ewallet,ovo_ewallet",
+        DateTime $expiration = null,
+        DateTime $dueDate = null,
+        String $vaDisplayName = null,
+    )
+    {
+       try {
+            return Http::withHeaders(self::getDefaultHeaders())->post(self::getBaseUrl()."/payment-checkout/create-v2", [
+                'partner_trx_id' => $partnerTrxId,
+                'description' => $description,
+                'notes' => $notes,
+                'sender_name' => $senderName,
+                'amount' => $amount,
+                'email' => $email,
+                'phone_number' => $phoneNumber,
+                'is_open' => $isOpen,
+                'step' => $step,
+                'include_admin_fee' => $includeAdminFee,
+                'list_disabled_payment_methods' => $listDisabledPaymentMethods,
+                'list_enabled_banks' => $listEnabledBanks,
+                'list_enabled_ewallet' => $listEnabledEwallet,
+                'expiration' => $expiration,
+                'due_date' => $dueDate,
+                'va_display_name' => $vaDisplayName
+            ]);
+       } catch(\Exception $e) {
+           throwException($e);
+       }
+    }
+
+    /**
+     * Our Invoicing product is leveraging most parameters that are defined for our payment checkout in the above section with some additional parameters that are only applicable for Invoicing product.
+     * 
+     * @param int $partnerTrxId 
+     * @param string|null $description 
+     * @param string|null $notes 
+     * @param string $senderName 
+     * @param int $amount 
+     * @param string $email 
+     * @param string $phoneNumber 
+     * @param bool $isOpen 
+     * @param string $step 
+     * @param bool $includeAdminFee 
+     * @param string|null $listDisabledPaymentMethods 
+     * @param string $listEnabledBanks 
+     * @param string $listEnabledEwallet 
+     * @param DateTime|null $expiration 
+     * @param DateTime|null $dueDate 
+     * @param string|null $partnerUserId 
+     * @param string|null $fullName 
+     * @param bool $isVaLifetime 
+     * @param array $invoiceItems 
+     * @param string|null $attachment 
+     * @return Response|void 
+     */
+    public static function createInvoice(
+        int $partnerTrxId,
+        String $description = null,
+        String $notes = null,
+        String $senderName,
+        int $amount = 15000,
+        String $email,
+        String $phoneNumber,
+        bool $isOpen = false,
+        String $step = 'input-amount',
+        bool $includeAdminFee = false,
+        String $listDisabledPaymentMethods = null,
+        String $listEnabledBanks = "002,008,009,013,022",
+        String $listEnabledEwallet = "shopeepay_ewallet,dana_ewallet,linkaja_ewallet,ovo_ewallet",
+        DateTime $expiration = null,
+        DateTime $dueDate = null,
+        String $partnerUserId = null,
+        String $fullName = null,
+        bool $isVaLifetime = false,
+        array $invoiceItems = ['item', 'description', 'quantity', 'date_of_purchase', 'price_per_item'],
+        String $attachment = null,
+    )
+    {
+       try {
+            return Http::withHeaders(self::getDefaultHeaders())->post(self::getBaseUrl()."/payment-checkout/create-invoice", [
+                'partner_trx_id' => $partnerTrxId,
+                'description' => $description,
+                'notes' => $notes,
+                'sender_name' => $senderName,
+                'amount' => $amount,
+                'email' => $email,
+                'phone_number' => $phoneNumber,
+                'is_open' => $isOpen,
+                'step' => $step,
+                'include_admin_fee' => $includeAdminFee,
+                'list_disabled_payment_methods' => $listDisabledPaymentMethods,
+                'list_enabled_banks' => $listEnabledBanks,
+                'list_enabled_ewallet' => $listEnabledEwallet,
+                'expiration' => $expiration,
+                'due_date' => $dueDate,
+                'partner_user_id' => $partnerUserId,
+                'full_name' => $fullName,
+                'is_va_lifetime' => $isVaLifetime,
+                'invoice_items' => $invoiceItems,
+                'attachment' => $attachment
+            ]);
+       } catch(\Exception $e) {
+           throwException($e);
+       }
+    }
+
+    /**
+     * An endpoint to retrieve and/or re-send the latest callback status of a transaction. We can also provide a static IP for the callback to ensure the callback sent is from OY that can be whitelisted by partners.
+     * 
+     * @param int $partnerTrxId 
+     * @param bool $sendCallback 
+     * @return Response|void 
+     */
+    public static function getPaymentStatus(
+        int $partnerTrxId,
+        bool $sendCallback = false,
+    )
+    {
+       try {
+            return Http::withHeaders(self::getDefaultHeaders())->get(self::getBaseUrl()."/payment-checkout/status", [
+                'partner_trx_id' => $partnerTrxId,
+                'send_callback' => $sendCallback,
+            ]);
+       } catch(\Exception $e) {
+           throwException($e);
+       }
+    }
+
+    /**
+     * An API to Delete Payment / Invoice Link based on payment_link_id or partner_tx_id that is still active and a payment method has not been selected.
+     * 
+     * @param int $paymentLinkIdOrPartnerTrxId 
+     * @return Response|void 
+     */
+    public static function deletePaymentLink(
+        int $paymentLinkIdOrPartnerTrxId,
+    )
+    {
+       try {
+            return Http::withHeaders(self::getDefaultHeaders())->delete(self::getBaseUrl()."/payment-checkout/$paymentLinkIdOrPartnerTrxId");
+       } catch(\Exception $e) {
+           throwException($e);
+       }
+    }
+
+    /**
+     * An API to get a payment/invoice data.
+     * 
+     * @param int $paymentLinkIdOrPartnerTrxId 
+     * @return Response|void 
+     */
+    public static function getPaymentLink(
+        int $paymentLinkIdOrPartnerTrxId,
+    )
+    {
+       try {
+            return Http::withHeaders(self::getDefaultHeaders())->get(self::getBaseUrl()."/payment-checkout/$paymentLinkIdOrPartnerTrxId");
        } catch(\Exception $e) {
            throwException($e);
        }
